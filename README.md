@@ -1,4 +1,24 @@
 # Rustのクレート"SQLX"を試すリポジトリ
+## 実行
+sqlx-cliのインストール
+```
+cargo install sqlx-cli
+```
+Docker Containerの作成
+```
+cd docker/
+docker compose -p db-test up
+```
+マイグレーションの実行
+```
+sqlx database create
+sqlx migrate run
+```
+ビルド&実行
+```
+cargo run
+```
+
 ## 試したこと
 ### 複合型
 **これはうまくいかなかった**  
