@@ -1,22 +1,17 @@
-use std::env;
+use crate::repo::ExDate;
+use repo::CreateItem;
 use repo::Item;
 use sqlx::PgPool;
-
-
-use repo::CreateItem;
-use tokio::time::{self, sleep};
-
-use crate::repo::ExDate;
+use std::env;
 
 mod repo;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>>{
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv()?;
 
     let url = env::var("DATABASE_URL")?;
     let pool = PgPool::connect(&url).await?;
-
 
     let ex_date = ExDate {
         year: 2024,
@@ -25,65 +20,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     };
 
     let payload = CreateItem {
-        name: "チョコ".to_string(),
+        name: "potato".to_string(),
         expiration_date: ex_date,
     };
 
-    // let res = insert(&pool, payload).await?;
-    // println!("{:?}", res);
+    let put = insert(&pool, payload).await?;
+    println!("{:#?}", put);
 
-    let res2 = select(&pool, 3).await?;
-    println!("{:?}", res2);
+    let get = select(&pool, 1).await?;
+    println!("{:#?}", get);
 
     Ok(())
 }
 
-
 async fn insert(pool: &PgPool, payload: CreateItem) -> Result<Item, Box<dyn std::error::Error>> {
-    let item = sqlx::query_as::<_, Item>(r#"
-INSERT INTO item (name, expiration_date)
-VALUES ($1, row($2, $3, $4))
+    let item = sqlx::query_as::<_, Item>(
+        r#"
+INSERT INTO item (name, year, month, day)
+VALUES ($1, $2, $3, $4)
 RETURNING *
-    "#)
+    "#,
+    )
     .bind(payload.name)
     .bind(payload.expiration_date.year)
     .bind(payload.expiration_date.month)
     .bind(payload.expiration_date.day)
     .fetch_one(pool)
     .await?;
-    
 
     Ok(item)
 }
-
 
 async fn select(pool: &PgPool, id: i32) -> Result<Item, Box<dyn std::error::Error>> {
-    let item = sqlx::query_as::<_, Item>(r#"
+    let item = sqlx::query_as::<_, Item>(
+        r#"
 SELECT * FROM item
 WHERE id = $1
-    "#)
+    "#,
+    )
     .bind(id)
     .fetch_one(pool)
-    .await.expect("select error");
-    
+    .await
+    .expect("select error");
 
     Ok(item)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// !!!!!以下のコードは失敗したもの!!!!
 // #[tokio::main]
 // async fn main() -> Result<(), Box<dyn std::error::Error>>{
 //     dotenvy::dotenv()?;
@@ -120,11 +103,9 @@ WHERE id = $1
 //     .bind(payload.day)
 //     .fetch_one(pool)
 //     .await?;
-    
 
 //     Ok(item)
 // }
-
 
 // async fn select(pool: &PgPool, id: i32) -> Result<Item, Box<dyn std::error::Error>> {
 //     let item = sqlx::query_as::<_, Item>(r#"
@@ -134,7 +115,6 @@ WHERE id = $1
 //     .bind(id)
 //     .fetch_one(pool)
 //     .await.expect("select error");
-    
 
 //     Ok(item)
 // }

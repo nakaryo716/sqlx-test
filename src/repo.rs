@@ -1,7 +1,12 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgRow, FromRow, Row};
 
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExDate {
+    pub year: i32,
+    pub month: i32,
+    pub day: i32,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Item {
@@ -11,13 +16,6 @@ pub struct Item {
     pub used: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExDate {
-    pub year: i32,
-    pub month: i32,
-    pub day: i32,
-}
-
 pub struct CreateItem {
     pub name: String,
     pub expiration_date: ExDate,
@@ -25,32 +23,29 @@ pub struct CreateItem {
 
 impl FromRow<'_, PgRow> for Item {
     fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(Self { 
-            id: row.try_get(0)?,
-            name: row.try_get(1)?,
+        Ok(Self {
+            id: row.try_get("id")?,
+            name: row.try_get("name")?,
             expiration_date: ExDate {
-                year: row.try_get(2)?,
-                month: row.try_get(3)?,
-                day: row.try_get(4)?,
+                year: row.try_get("year")?,
+                month: row.try_get("month")?,
+                day: row.try_get("day")?,
             },
-            used: row.try_get(5)?
+            used: row.try_get("used")?,
         })
     }
 }
 
-
-
-
+// !!!!!以下のコードは失敗したもの!!!!
 // impl FromRow<'_, PgRow> for ExDate {
 //     fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
-//         Ok(Self { 
+//         Ok(Self {
 //             year: row.try_get("year")?,
 //             month: row.try_get("month")?,
 //             day: row.try_get("day")?
 //         })
 //     }
 // }
-
 
 // impl<'r> Decode<'r, Postgres> for ExDate {
 //     fn decode(value: <Postgres as HasValueRef<'r>>::ValueRef,
@@ -61,7 +56,6 @@ impl FromRow<'_, PgRow> for Item {
 // }
 
 // use sqlx::FromRow;
-
 
 // #[derive(Debug, FromRow)]
 // pub struct Item {
